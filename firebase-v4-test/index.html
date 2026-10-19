@@ -30,7 +30,25 @@ async function createConfig(kind){
 $('locationForm').onsubmit=e=>{e.preventDefault();createConfig('locations')};
 $('productForm').onsubmit=e=>{e.preventDefault();createConfig('products')};
 let movementBusy=false, movementDone=false, operationId=null;
+// Reset the idempotency key if the user changes any movement input after a failure.
+['product','action','quantity','destination','location'].forEach(id=>$(id).addEventListener('change',()=>{
+  if(!movementBusy&&!movementDone&&operationId){operationId=null;$('movementSubmit').textContent='Enregistrer';}
+}));
+async function diagnosticAcces(){
+  const p=products.find(x=>x.id===$('product').value),l=locations.find(x=>x.id===selected),t=locations.find(x=>x.id===$('destination').value);
+  const lines=['Diagnostic en lecture seule — projet : '+db.app.options.projectId];
+  if(!user||!p||!l||!t){lines.push('Connexion, produit ou lieux manquants.');return lines.join('\n')}
+  for(const [label,r] of [['Structure',doc(db,...base)],['Stock de départ',ref('stocks',stockId(l.id,p.id))],['Stock de destination',ref('stocks',stockId(t.id,p.id))],['Mouvement inexistant (lecture)',ref('movements','DIAG-'+Date.now())]]){
+    try{const s=await getDoc(r);lines.push(label+': LECTURE OK — '+(s.exists()?'document existant':'document absent'))}
+    catch(e){lines.push(label+': REFUS — '+(e.code||e.message))}
+  }
+  lines.push('Aucune écriture effectuée.');return lines.join('\n');
+}
+
 function setMovementFeedback(message,success){const el=$('movementFeedback');el.textContent=message;el.classList.remove('hidden');el.style.background=success?'#173a2a':'#422522';el.style.borderColor=success?'#3b9466':'#b85c4c';el.style.color=success?'#dcffe8':'#ffe3df'}
+const diagBtn=document.createElement('button');diagBtn.type='button';diagBtn.className='secondary';diagBtn.textContent='Vérifier les accès Firebase (sans modifier le stock)';
+$('movementForm').appendChild(diagBtn);
+diagBtn.onclick=async()=>{diagBtn.disabled=true;try{$('status').textContent=await diagnosticAcces()}catch(e){err(e)}finally{diagBtn.disabled=false}};
 $('newMovement').onclick=()=>{movementDone=false;operationId=null;$('movementSubmit').disabled=false;$('movementSubmit').textContent='Enregistrer';$('newMovement').classList.add('hidden');$('movementFeedback').classList.add('hidden');$('quantity').value='1';document.querySelector('[data-tab="movement"]').click()};
 $('movementForm').onsubmit=async e=>{
   e.preventDefault();
