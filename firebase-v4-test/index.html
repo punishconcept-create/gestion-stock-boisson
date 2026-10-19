@@ -81,7 +81,7 @@ $('movementForm').onsubmit=async e=>{
     // Also show confirmation in the visible stock tab.
     let banner=$('stockConfirmation');if(!banner){banner=document.createElement('p');banner.id='stockConfirmation';banner.setAttribute('role','status');$('stock').prepend(banner)}
     banner.className='notice';banner.textContent=$('movementFeedback').textContent+' Pour effectuer une autre opération, clique sur « Mouvements », puis « Effectuer un autre mouvement ».';
-  }catch(error){err(error);setMovementFeedback('Échec ou connexion incertaine : '+(error.message||error)+'. Réessaie une seule fois sans changer les champs.',false);button.textContent='Réessayer le même mouvement';button.disabled=false}
+  }catch(error){err(error);setMovementFeedback('Échec ['+(error.code||'sans-code')+'] : '+(error.message||error)+'. Aucun stock modifié si la transaction a été refusée.',false);button.textContent='Réessayer le même mouvement';button.disabled=false}
   finally{movementBusy=false;if(movementDone)button.disabled=true}
 };
 </script></body></html>
