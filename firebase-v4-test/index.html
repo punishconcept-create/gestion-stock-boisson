@@ -46,14 +46,14 @@ async function diagnosticAcces(){
 }
 
 let feedbackTimer=null;
-function hideMovementFeedback(){if(feedbackTimer!==null){clearTimeout(feedbackTimer);feedbackTimer=null;}$('movementFeedback').classList.add('hidden')}
+function hideMovementFeedback(){if(feedbackTimer!==null){clearTimeout(feedbackTimer);feedbackTimer=null;}$('movementFeedback').classList.add('hidden');$('movementFeedback').style.display='none'}
 function setMovementFeedback(message,success){
   if(feedbackTimer!==null){clearTimeout(feedbackTimer);feedbackTimer=null;}
-  const el=$('movementFeedback');el.textContent=message;el.classList.remove('hidden');
+  const el=$('movementFeedback');el.textContent=message;el.classList.remove('hidden');el.style.display='block';
   el.style.background=success?'#173a2a':'#422522';el.style.borderColor=success?'#3b9466':'#b85c4c';el.style.color=success?'#dcffe8':'#ffe3df';
   // Seules les confirmations de réussite disparaissent après 5 secondes.
   // Les erreurs restent visibles pour permettre de les lire.
-  if(success)feedbackTimer=setTimeout(()=>{el.classList.add('hidden');feedbackTimer=null},5000);
+  if(success)feedbackTimer=setTimeout(()=>{el.classList.add('hidden');el.style.display='none';feedbackTimer=null},5000);
 }
 const diagBtn=document.createElement('button');diagBtn.type='button';diagBtn.className='secondary';diagBtn.textContent='Vérifier les accès Firebase (sans modifier le stock)';
 $('movementForm').appendChild(diagBtn);
