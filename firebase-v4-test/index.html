@@ -51,7 +51,7 @@ onAuthStateChanged(auth,async u=>{
      if(inv.claimedBy===null)await updateDoc(invitationRef,{claimedBy:u.uid});
      const memberRef=ref('collaborators',u.uid),existingMember=await getDoc(memberRef);
      if(!existingMember.exists())await setDoc(memberRef,{name:inv.name,email:inv.email,role:inv.role,locationIds:inv.locationIds,inviteId:invitationId,updatedAt:serverTimestamp()});
-     history.replaceState(null,'',location.pathname);
+     window.history.replaceState(null,'',window.location.pathname);
    }
    const snap=await getDoc(doc(db,...base));
    if(!snap.exists()||snap.data().active!==true){$('status').textContent='Structure inactive ou introuvable.';return}
