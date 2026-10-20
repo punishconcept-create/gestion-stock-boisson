@@ -45,14 +45,23 @@ async function diagnosticAcces(){
   lines.push('Aucune écriture effectuée.');return lines.join('\n');
 }
 
-function setMovementFeedback(message,success){const el=$('movementFeedback');el.textContent=message;el.classList.remove('hidden');el.style.background=success?'#173a2a':'#422522';el.style.borderColor=success?'#3b9466':'#b85c4c';el.style.color=success?'#dcffe8':'#ffe3df'}
+let feedbackTimer=null;
+function hideMovementFeedback(){if(feedbackTimer!==null){clearTimeout(feedbackTimer);feedbackTimer=null;}$('movementFeedback').classList.add('hidden')}
+function setMovementFeedback(message,success){
+  if(feedbackTimer!==null){clearTimeout(feedbackTimer);feedbackTimer=null;}
+  const el=$('movementFeedback');el.textContent=message;el.classList.remove('hidden');
+  el.style.background=success?'#173a2a':'#422522';el.style.borderColor=success?'#3b9466':'#b85c4c';el.style.color=success?'#dcffe8':'#ffe3df';
+  // Seules les confirmations de réussite disparaissent après 5 secondes.
+  // Les erreurs restent visibles pour permettre de les lire.
+  if(success)feedbackTimer=setTimeout(()=>{el.classList.add('hidden');feedbackTimer=null},5000);
+}
 const diagBtn=document.createElement('button');diagBtn.type='button';diagBtn.className='secondary';diagBtn.textContent='Vérifier les accès Firebase (sans modifier le stock)';
 $('movementForm').appendChild(diagBtn);
 diagBtn.onclick=async()=>{diagBtn.disabled=true;try{$('status').textContent=await diagnosticAcces()}catch(e){err(e)}finally{diagBtn.disabled=false}};
-$('newMovement').onclick=()=>{operationId=null;$('movementSubmit').disabled=false;$('movementSubmit').textContent='Enregistrer';$('newMovement').classList.add('hidden');$('movementFeedback').classList.add('hidden');$('quantity').value='1';document.querySelector('[data-tab="movement"]').click()};
+$('newMovement').onclick=()=>{operationId=null;$('movementSubmit').disabled=false;$('movementSubmit').textContent='Enregistrer';$('newMovement').classList.add('hidden');hideMovementFeedback();$('quantity').value='1';document.querySelector('[data-tab="movement"]').click()};
 // Retirer le message de l'opération précédente dès qu'un nouveau choix est fait.
 ['product','action','quantity','destination','location'].forEach(id=>$(id).addEventListener('input',()=>{
-  if(!movementBusy){$('movementFeedback').classList.add('hidden');$('newMovement').classList.add('hidden');$('movementSubmit').disabled=false;}
+  if(!movementBusy){hideMovementFeedback();$('newMovement').classList.add('hidden');$('movementSubmit').disabled=false;}
 }));
 $('movementForm').onsubmit=async e=>{
   e.preventDefault();
