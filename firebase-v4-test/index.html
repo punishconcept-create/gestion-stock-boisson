@@ -50,6 +50,10 @@ const diagBtn=document.createElement('button');diagBtn.type='button';diagBtn.cla
 $('movementForm').appendChild(diagBtn);
 diagBtn.onclick=async()=>{diagBtn.disabled=true;try{$('status').textContent=await diagnosticAcces()}catch(e){err(e)}finally{diagBtn.disabled=false}};
 $('newMovement').onclick=()=>{movementDone=false;operationId=null;$('movementSubmit').disabled=false;$('movementSubmit').textContent='Enregistrer';$('newMovement').classList.add('hidden');$('movementFeedback').classList.add('hidden');$('quantity').value='1';document.querySelector('[data-tab="movement"]').click()};
+// Retirer le message de l'opération précédente dès qu'un nouveau choix est fait.
+['product','action','quantity','destination','location'].forEach(id=>$(id).addEventListener('input',()=>{
+  if(!movementBusy){$('movementFeedback').classList.add('hidden');}
+}));
 $('movementForm').onsubmit=async e=>{
   e.preventDefault();
   if(!user||movementBusy||movementDone)return;if(legacyStocks().length){setMovementFeedback('Migration des anciens documents de stock nécessaire avant tout mouvement. Aucun stock modifié.',false);return;}
@@ -72,15 +76,20 @@ $('movementForm').onsubmit=async e=>{
       if(to){const dest=(b.exists()?b.data().quantity:0)+q;if(!Number.isSafeInteger(dest)||dest>1000000)throw Error('Quantité trop élevée');tx.set(to,{locationId:t.id,productId:p.id,quantity:dest,lastMovementId:opId})}
       tx.set(movementRef,{type,quantity:q,productId:p.id,productName:p.name,fromId:l.id,fromName:l.name,toId:to?t.id:null,toName:to?t.name:null,actorUid:user.uid,createdAt:serverTimestamp()});
     });
-    movementDone=true;
-    setMovementFeedback('✓ '+(type==='in'?'Entrée':type==='out'?'Sortie':'Transfert')+' de '+q+' bouteille'+(q>1?'s':'')+' enregistré'+(type==='in'?'e':'')+' avec succès. Stock synchronisé.',true);
-    $('status').textContent='Connecté · Mouvement enregistré et synchronisé.';
-    button.textContent='Mouvement enregistré ✓';
-    $('newMovement').classList.remove('hidden');
-    document.querySelector('[data-tab="stock"]').click();
-    // Also show confirmation in the visible stock tab.
-    let banner=$('stockConfirmation');if(!banner){banner=document.createElement('p');banner.id='stockConfirmation';banner.setAttribute('role','status');$('stock').prepend(banner)}
-    banner.className='notice';banner.textContent=$('movementFeedback').textContent+' Pour effectuer une autre opération, clique sur « Mouvements », puis « Effectuer un autre mouvement ».';
+    // Confirmation du mouvement, puis remise à zéro du formulaire pour le prochain.
+    const confirmation='✓ '+(type==='in'?'Entrée':type==='out'?'Sortie':'Transfert')+' de '+q+' bouteille'+(q>1?'s':'')+' enregistré'+(type==='in'?'e':'')+' avec succès. Stock synchronisé.';
+    $('status').textContent='Connecté · Synchronisation active';
+    operationId=null;
+    movementDone=false;
+    $('quantity').value='1';
+    $('action').value='in';
+    $('destinationWrap').classList.add('hidden');
+    button.textContent='Enregistrer';
+    button.disabled=false;
+    $('newMovement').classList.add('hidden');
+    setMovementFeedback(confirmation,true);
+    // La confirmation s'efface dès que l'utilisateur prépare le mouvement suivant.
+    // Aucun rechargement de page ni clic supplémentaire n'est nécessaire.
   }catch(error){err(error);setMovementFeedback('Échec ['+(error.code||'sans-code')+'] : '+(error.message||error)+'. Aucun stock modifié si la transaction a été refusée.',false);button.textContent='Réessayer le même mouvement';button.disabled=false}
   finally{movementBusy=false;if(movementDone)button.disabled=true}
 };
