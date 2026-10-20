@@ -29,10 +29,10 @@ async function createConfig(kind){
 }
 $('locationForm').onsubmit=e=>{e.preventDefault();createConfig('locations')};
 $('productForm').onsubmit=e=>{e.preventDefault();createConfig('products')};
-let movementBusy=false, movementDone=false, operationId=null;
+let movementBusy=false, operationId=null;
 // Reset the idempotency key if the user changes any movement input after a failure.
 ['product','action','quantity','destination','location'].forEach(id=>$(id).addEventListener('change',()=>{
-  if(!movementBusy&&!movementDone&&operationId){operationId=null;$('movementSubmit').textContent='Enregistrer';}
+  if(!movementBusy&&operationId){operationId=null;$('movementSubmit').textContent='Enregistrer';}
 }));
 async function diagnosticAcces(){
   const p=products.find(x=>x.id===$('product').value),l=locations.find(x=>x.id===selected),t=locations.find(x=>x.id===$('destination').value);
@@ -49,14 +49,14 @@ function setMovementFeedback(message,success){const el=$('movementFeedback');el.
 const diagBtn=document.createElement('button');diagBtn.type='button';diagBtn.className='secondary';diagBtn.textContent='Vérifier les accès Firebase (sans modifier le stock)';
 $('movementForm').appendChild(diagBtn);
 diagBtn.onclick=async()=>{diagBtn.disabled=true;try{$('status').textContent=await diagnosticAcces()}catch(e){err(e)}finally{diagBtn.disabled=false}};
-$('newMovement').onclick=()=>{movementDone=false;operationId=null;$('movementSubmit').disabled=false;$('movementSubmit').textContent='Enregistrer';$('newMovement').classList.add('hidden');$('movementFeedback').classList.add('hidden');$('quantity').value='1';document.querySelector('[data-tab="movement"]').click()};
+$('newMovement').onclick=()=>{operationId=null;$('movementSubmit').disabled=false;$('movementSubmit').textContent='Enregistrer';$('newMovement').classList.add('hidden');$('movementFeedback').classList.add('hidden');$('quantity').value='1';document.querySelector('[data-tab="movement"]').click()};
 // Retirer le message de l'opération précédente dès qu'un nouveau choix est fait.
 ['product','action','quantity','destination','location'].forEach(id=>$(id).addEventListener('input',()=>{
-  if(!movementBusy){$('movementFeedback').classList.add('hidden');}
+  if(!movementBusy){$('movementFeedback').classList.add('hidden');$('newMovement').classList.add('hidden');$('movementSubmit').disabled=false;}
 }));
 $('movementForm').onsubmit=async e=>{
   e.preventDefault();
-  if(!user||movementBusy||movementDone)return;if(legacyStocks().length){setMovementFeedback('Migration des anciens documents de stock nécessaire avant tout mouvement. Aucun stock modifié.',false);return;}
+  if(!user||movementBusy)return;if(legacyStocks().length){setMovementFeedback('Migration des anciens documents de stock nécessaire avant tout mouvement. Aucun stock modifié.',false);return;}
   const p=products.find(x=>x.id===$('product').value),l=locations.find(x=>x.id===selected),t=locations.find(x=>x.id===$('destination').value),type=$('action').value,q=Number($('quantity').value);
   if(!p||!l||!Number.isSafeInteger(q)||q<1){setMovementFeedback('Choisis un produit, un lieu et une quantité entière positive.',false);return}
   if(type==='transfer'&&(!t||t.id===l.id)){setMovementFeedback('Choisis un autre lieu.',false);return}
@@ -80,7 +80,7 @@ $('movementForm').onsubmit=async e=>{
     const confirmation='✓ '+(type==='in'?'Entrée':type==='out'?'Sortie':'Transfert')+' de '+q+' bouteille'+(q>1?'s':'')+' enregistré'+(type==='in'?'e':'')+' avec succès. Stock synchronisé.';
     $('status').textContent='Connecté · Synchronisation active';
     operationId=null;
-    movementDone=false;
+    
     $('quantity').value='1';
     $('action').value='in';
     $('destinationWrap').classList.add('hidden');
@@ -91,6 +91,6 @@ $('movementForm').onsubmit=async e=>{
     // La confirmation s'efface dès que l'utilisateur prépare le mouvement suivant.
     // Aucun rechargement de page ni clic supplémentaire n'est nécessaire.
   }catch(error){err(error);setMovementFeedback('Échec ['+(error.code||'sans-code')+'] : '+(error.message||error)+'. Aucun stock modifié si la transaction a été refusée.',false);button.textContent='Réessayer le même mouvement';button.disabled=false}
-  finally{movementBusy=false;if(movementDone)button.disabled=true}
+  finally{movementBusy=false;button.disabled=false}
 };
 </script></body></html>
