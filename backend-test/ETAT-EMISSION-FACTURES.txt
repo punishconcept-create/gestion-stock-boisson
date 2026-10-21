@@ -1,0 +1,6 @@
+V4 TEST - 2026-10-20
+Route /api/factures/emettre raccordée dans gsb-v4-backend-entry-TEST.mjs.
+Backend Firebase Admin: identité vérifiée; émission par emettreFacture avec calcul verrouillé et transaction.
+Tests locaux: 8 contrôles HTTP, 8 verrouillage, 4 calcul; node --check de tous les .mjs.
+IMPORTANT: aucune exécution sur Firebase TEST réel. Pré-requis: données billingParties et billingSnapshot verrouillées dans les événements, inventaire validated, brouillon cohérent et événement closed.
+Reste: tests transactionnels sur émulateur Firestore / Firebase TEST, déploiement backend avec identité de service et validation règles, interface finale, facturation réglementaire.

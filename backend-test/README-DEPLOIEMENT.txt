@@ -1,0 +1,1 @@
+Backend GSB V4 TEST. Cloud Run Buildpacks: repertoire de contexte /backend-test, commande npm start. Variables requises: GOOGLE_CLOUD_PROJECT=gestion-stock-boisson-test; ALLOWED_ORIGIN=https://punishconcept-create.github.io; STRUCTURE_ID=punish-concept. Verifier IAM Firestore et Auth sur le compte de service Cloud Run. Ne pas deployer en production.

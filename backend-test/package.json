@@ -1,0 +1,9 @@
+{
+  "name": "gsb-v4-backend-test",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=20"},
+  "scripts": {"start": "node gsb-v4-backend-entry-TEST.mjs"},
+  "dependencies": {"firebase-admin": "^13.0.0"}
+}
